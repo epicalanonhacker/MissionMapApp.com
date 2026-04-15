@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission Map — Your Real World. Game Skinned.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #050507;
+    --dark: #0a0b0f;
+    --dark-card: #10111a;
+    --dark-border: #1a1c2e;
+    --cyan: #00f0ff;
+    --cyan-dim: #00f0ff33;
+    --cyan-glow: 0 0 30px #00f0ff44, 0 0 60px #00f0ff22;
+    --green: #39ff14;
+    --green-dim: #39ff1433;
+    --gold: #ffd700;
+    --gold-dim: #ffd70033;
+    --purple: #7b5af5;
+    --purple-dim: #7b5af533;
+    --text: #e8e8ec;
+    --text-dim: #8a8a9a;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Exo 2', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== NOISE OVERLAY ===== */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(5,5,7,0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--dark-border);
+    transition: background 0.3s;
+  }
+
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    text-shadow: 0 0 20px var(--cyan-dim);
+    text-decoration: none;
+  }
+
+  .nav-logo span { color: var(--text); }
+
+  .nav-ctas {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 6px;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-primary {
+    background: var(--cyan);
+    color: var(--black);
+    box-shadow: 0 0 20px var(--cyan-dim);
+  }
+  .btn-primary:hover {
+    box-shadow: var(--cyan-glow);
+    transform: translateY(-2px);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--dark-border);
+  }
+  .btn-outline:hover {
+    border-color: var(--purple);
+    color: var(--purple);
+    box-shadow: 0 0 20px var(--purple-dim);
+  }
+
+  .btn-discord {
+    background: #5865F2;
+    color: #fff;
+  }
+  .btn-discord:hover {
+    box-shadow: 0 0 24px #5865F244;
+    transform: translateY(-2px);
+  }
+
+  .btn-dim {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid #1a1a2a;
+    cursor: default;
+    font-size: 0.8rem;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6rem 2rem 4rem;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, #00f0ff08 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 20% 80%, #39ff1406 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 70%, #7b5af506 0%, transparent 50%);
+  }
+
+  /* Animated fog particles */
+  .fog-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .fog-layer::before,
+  .fog-layer::after {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: radial-gradient(ellipse, rgba(0,240,255,0.03) 0%, transparent 70%);
+    animation: fogDrift 20s ease-in-out infinite;
+  }
+  .fog-layer::after {
+    background: radial-gradient(ellipse, rgba(57,255,20,0.02) 0%, transparent 70%);
+    animation: fogDrift 25s ease-in-out infinite reverse;
+    animation-delay: -5s;
+  }
+
+  @keyframes fogDrift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(3%, -2%) rotate(1deg); }
+    66% { transform: translate(-2%, 3%) rotate(-1deg); }
+  }
+
+  /* Grid lines bg */
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--cyan-dim);
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    animation: fadeInDown 0.8s ease both;
+  }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 10vw, 7rem);
+    line-height: 0.95;
+    letter-spacing: 4px;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.8s ease 0.2s both;
+  }
+
+  .hero h1 .accent {
+    background: linear-gradient(135deg, var(--cyan), var(--green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    font-weight: 300;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+    animation: fadeInUp 0.8s ease 0.4s both;
+  }
+
+  .hero-skins {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    margin-bottom: 2.5rem;
+    animation: fadeInUp 0.8s ease 0.5s both;
+  }
+
+  .hero-skins span {
+    color: var(--text);
+    padding: 0 0.15rem;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.8s ease 0.6s both;
+  }
+
+  .hero-ctas .btn { padding: 0.8rem 2rem; font-size: 0.95rem; }
+
+  .hero-free {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--green);
+    letter-spacing: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+    animation: fadeInUp 0.8s ease 0.7s both;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fadeInUp 1s ease 1s both;
+  }
+
+  .scroll-arrow {
+    width: 20px;
+    height: 30px;
+    border: 1.5px solid var(--text-dim);
+    border-radius: 10px;
+    position: relative;
+  }
+  .scroll-arrow::after {
+    content: '';
+    width: 3px;
+    height: 6px;
+    background: var(--cyan);
+    border-radius: 2px;
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: scrollBounce 2s ease-in-out infinite;
+  }
+
+  @keyframes scrollBounce {
+    0%, 100% { opacity: 1; top: 6px; }
+    50% { opacity: 0.3; top: 16px; }
+  }
+
+  /* ===== SKINS SECTION ===== */
+  .section { padding: 6rem 2rem; }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 3px;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .section-sub {
+    text-align: center;
+    color: var(--text-dim);
+    max-width: 540px;
+    margin: 0 auto 3.5rem;
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .skins-grid {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  /* Tab buttons */
+  .skin-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .skin-tab {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 2px;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid var(--dark-border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skin-tab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: 8px;
+  }
+
+  .skin-tab:hover {
+    color: var(--text);
+    border-color: #333;
+  }
+
+  .skin-tab.active {
+    color: var(--text);
+    border-color: var(--tab-color, var(--cyan));
+    box-shadow: 0 0 20px var(--tab-glow, var(--cyan-dim));
+  }
+  .skin-tab.active::before { opacity: 1; }
+
+  .skin-tab[data-skin="gta"] { --tab-color: #97cd3b; --tab-glow: #97cd3b33; }
+  .skin-tab[data-skin="gta"]::before { background: linear-gradient(180deg, #97cd3b11, transparent); }
+  .skin-tab[data-skin="gta-day"] { --tab-color: #b0b0b0; --tab-glow: #b0b0b033; }
+  .skin-tab[data-skin="gta-day"]::before { background: linear-gradient(180deg, #b0b0b011, transparent); }
+  .skin-tab[data-skin="gta-night"] { --tab-color: #4a90d9; --tab-glow: #4a90d933; }
+  .skin-tab[data-skin="gta-night"]::before { background: linear-gradient(180deg, #4a90d911, transparent); }
+  .skin-tab[data-skin="rdr2"] { --tab-color: #c8864a; --tab-glow: #c8864a33; }
+  .skin-tab[data-skin="rdr2"]::before { background: linear-gradient(180deg, #c8864a11, transparent); }
+  .skin-tab[data-skin="minecraft"] { --tab-color: #5b8731; --tab-glow: #5b873133; }
+  .skin-tab[data-skin="minecraft"]::before { background: linear-gradient(180deg, #5b873111, transparent); }
+  .skin-tab[data-skin="fortnite"] { --tab-color: #3a7bf7; --tab-glow: #3a7bf733; }
+  .skin-tab[data-skin="fortnite"]::before { background: linear-gradient(180deg, #3a7bf711, transparent); }
+  .skin-tab[data-skin="fallout"] { --tab-color: #43d15b; --tab-glow: #43d15b33; }
+  .skin-tab[data-skin="fallout"]::before { background: linear-gradient(180deg, #43d15b11, transparent); }
+  .skin-tab[data-skin="skyrim"] { --tab-color: #6eadd8; --tab-glow: #6eadd833; }
+  .skin-tab[data-skin="skyrim"]::before { background: linear-gradient(180deg, #6eadd811, transparent); }
+  .skin-tab[data-skin="cyberpunk"] { --tab-color: #fcee09; --tab-glow: #fcee0933; }
+  .skin-tab[data-skin="cyberpunk"]::before { background: linear-gradient(180deg, #fcee0911, transparent); }
+
+  /* Phone showcase area */
+  .skin-showcase {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    min-height: 560px;
+    position: relative;
+  }
+
+  /* Phone mockup frame */
+  .phone-frame {
+    width: 270px;
+    height: 540px;
+    border-radius: 32px;
+    border: 3px solid #2a2c3e;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+    box-shadow:
+      0 0 0 1px #1a1c2e,
+      0 20px 60px rgba(0,0,0,0.5),
+      0 0 40px var(--phone-glow, rgba(0,240,255,0.1));
+    transition: box-shadow 0.5s ease;
+  }
+
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 24px;
+    background: #0a0b0f;
+    border-radius: 0 0 16px 16px;
+    z-index: 10;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: var(--dark);
+  }
+
+  .phone-screen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .phone-screen img.active-skin {
+    opacity: 1;
+  }
+
+  /* Skin description panel */
+  .skin-info {
+    max-width: 340px;
+    flex-shrink: 1;
+  }
+
+  .skin-info-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    transition: color 0.4s;
+  }
+
+  .skin-info h3 {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    letter-spacing: 3px;
+    margin-bottom: 0.75rem;
+    transition: color 0.3s;
+  }
+
+  .skin-info p {
+    color: var(--text-dim);
+    font-weight: 300;
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  .skin-info .skin-badge {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 6px;
+    border: 1px solid;
+  }
+
+  @media (max-width: 768px) {
+    .skin-showcase {
+      flex-direction: column;
+      gap: 2rem;
+      min-height: auto;
+    }
+    .phone-frame {
+      width: 220px;
+      height: 440px;
+      border-radius: 26px;
+    }
+    .skin-info {
+      text-align: center;
+      max-width: 100%;
+    }
+    .skin-info h3 { font-size: 2rem; }
+    .skin-tabs { gap: 0.35rem; }
+    .skin-tab { font-size: 0.8rem; padding: 0.45rem 0.8rem; }
+  }
+
+  /* Skin accent colors handled by tab system */
+
+  /* ===== FEATURES ===== */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .feature-card {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+
+  .feature-card:hover {
+    border-color: #2a2c40;
+    transform: translateY(-2px);
+  }
+
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--feat-color, var(--cyan)), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .feature-card:hover::after { opacity: 1; }
+
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    background: var(--feat-bg, var(--cyan-dim));
+  }
+
+  .feature-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    margin-bottom: 0.75rem;
+  }
+
+  .feature-card p {
+    color: var(--text-dim);
+    font-weight: 300;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .feat-fog { --feat-color: var(--cyan); --feat-bg: var(--cyan-dim); }
+  .feat-mission { --feat-color: var(--gold); --feat-bg: var(--gold-dim); }
+  .feat-squad { --feat-color: var(--purple); --feat-bg: var(--purple-dim); }
+
+  /* ===== SOCIAL PROOF BAR ===== */
+  .proof-bar {
+    border-top: 1px solid var(--dark-border);
+    border-bottom: 1px solid var(--dark-border);
+    padding: 3rem 2rem;
+    background: var(--dark);
+  }
+
+  .proof-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 3rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .proof-item {
+    text-align: center;
+  }
+
+  .proof-number {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+
+  .proof-number .highlight {
+    color: var(--cyan);
+  }
+
+  .proof-label {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 0.25rem;
+  }
+
+  /* ===== TESTIMONIALS ===== */
+  .testimonials {
+    padding: 6rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .testimonials::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 50%, #00f0ff04, transparent 70%);
+  }
+
+  .testimonials-track {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    max-width: 1060px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .testimonial-card {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    border-radius: 16px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.4s ease;
+    position: relative;
+  }
+
+  .testimonial-card:hover {
+    border-color: #2a2c40;
+    transform: translateY(-3px);
+  }
+
+  .testimonial-stars {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 1rem;
+  }
+
+  .testimonial-star {
+    width: 14px;
+    height: 14px;
+    color: var(--gold);
+  }
+
+  .testimonial-quote {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--text);
+    font-weight: 300;
+    flex: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .testimonial-quote strong {
+    color: var(--cyan);
+    font-weight: 500;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--dark-border);
+  }
+
+  .testimonial-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .avatar-1 { background: linear-gradient(135deg, #97cd3b33, #97cd3b11); color: #97cd3b; }
+  .avatar-2 { background: linear-gradient(135deg, #3a7bf733, #3a7bf711); color: #3a7bf7; }
+  .avatar-3 { background: linear-gradient(135deg, #fcee0933, #fcee0911); color: #fcee09; }
+  .avatar-4 { background: linear-gradient(135deg, #c8864a33, #c8864a11); color: #c8864a; }
+  .avatar-5 { background: linear-gradient(135deg, #43d15b33, #43d15b11); color: #43d15b; }
+  .avatar-6 { background: linear-gradient(135deg, #7b5af533, #7b5af511); color: #7b5af7; }
+
+  .testimonial-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+  }
+
+  .testimonial-handle {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 1px;
+  }
+
+  .testimonial-skin-tag {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .tag-gta { background: #97cd3b18; color: #97cd3b; }
+  .tag-fn { background: #3a7bf718; color: #3a7bf7; }
+  .tag-cp { background: #fcee0918; color: #fcee09; }
+  .tag-rdr { background: #c8864a18; color: #c8864a; }
+  .tag-fo { background: #43d15b18; color: #43d15b; }
+  .tag-mc { background: #5b873118; color: #5b8731; }
+
+  /* Masonry-ish stagger for visual interest */
+  .testimonials-track .testimonial-card:nth-child(2) {
+    transform: translateY(20px);
+  }
+  .testimonials-track .testimonial-card:nth-child(2):hover {
+    transform: translateY(17px);
+  }
+
+  @media (max-width: 900px) {
+    .testimonials-track {
+      grid-template-columns: 1fr 1fr;
+    }
+    .testimonials-track .testimonial-card:nth-child(2) {
+      transform: none;
+    }
+    .testimonials-track .testimonial-card:nth-child(2):hover {
+      transform: translateY(-3px);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .testimonials-track {
+      grid-template-columns: 1fr;
+    }
+    .testimonials { padding: 4rem 1.2rem; }
+  }
+
+  /* ===== DISCORD CTA ===== */
+  .discord-section {
+    padding: 6rem 2rem;
+    text-align: center;
+  }
+
+  .discord-card {
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--dark-card);
+    border: 1px solid #2a2558;
+    border-radius: 20px;
+    padding: 3.5rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .discord-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, #5865F210, transparent 60%);
+  }
+
+  .discord-card > * { position: relative; z-index: 1; }
+
+  .discord-icon {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+
+  .discord-card h2 {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    letter-spacing: 3px;
+    margin-bottom: 0.75rem;
+  }
+
+  .discord-card p {
+    color: var(--text-dim);
+    font-weight: 300;
+    margin-bottom: 2rem;
+    font-size: 1.05rem;
+  }
+
+  .discord-card p strong {
+    color: #5865F2;
+    font-weight: 600;
+  }
+
+  /* ===== FINAL CTA ===== */
+  .final-cta {
+    padding: 8rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .final-cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 100%, #00f0ff06, transparent 60%);
+  }
+
+  .final-cta > * { position: relative; z-index: 1; }
+
+  .final-cta h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: 3px;
+    margin-bottom: 1rem;
+  }
+
+  .final-cta .tagline {
+    color: var(--text-dim);
+    font-weight: 300;
+    font-size: 1.15rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .final-ctas {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .final-ctas .btn { padding: 0.9rem 2.2rem; font-size: 1rem; }
+
+  /* ===== FOOTER ===== */
+  footer {
+    border-top: 1px solid var(--dark-border);
+    padding: 2.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .footer-copy {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .footer-socials {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .footer-socials a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    transition: color 0.3s;
+  }
+  .footer-socials a:hover { color: var(--cyan); }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 768px) {
+    nav { padding: 0.8rem 1.2rem; }
+    .nav-logo { font-size: 1.3rem; }
+    .btn { font-size: 0.78rem; padding: 0.5rem 1rem; }
+    .section { padding: 4rem 1.2rem; }
+    .skins-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.75rem; }
+    .skin-card { padding: 1.2rem 0.6rem; }
+    .features-grid { grid-template-columns: 1fr; }
+    .proof-grid { gap: 2rem; }
+    .discord-card { padding: 2.5rem 1.5rem; }
+    .final-cta { padding: 5rem 1.2rem; }
+    footer { justify-content: center; text-align: center; }
+  }
+
+  @media (max-width: 480px) {
+    .hero-ctas { flex-direction: column; align-items: center; }
+    .nav-ctas .btn-outline { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">MISSION <span>MAP</span></a>
+  <div class="nav-ctas">
+    <a href="#discord" class="btn btn-outline">Discord</a>
+    <a href="https://apps.apple.com/us/app/mission-map-app/id6744417798" class="btn btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      App Store
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="fog-layer"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="hero-content">
+    <span class="hero-tag">GPS Navigation Reimagined</span>
+    <h1>YOUR REAL WORLD.<br><span class="accent">GAME SKINNED.</span></h1>
+    <p class="hero-sub">Transform your map into the worlds you already love to play.</p>
+    <p class="hero-skins">
+      <span>GTA</span> · <span>RDR2</span> · <span>MINECRAFT</span> · <span>FORTNITE</span> · <span>FALLOUT</span> · <span>SKYRIM</span> · <span>CYBERPUNK</span>
+    </p>
+    <div class="hero-ctas">
+      <a href="https://apps.apple.com/us/app/mission-map-app/id6744417798" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Download on App Store
+      </a>
+      <span class="btn btn-dim">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.69l8.04-8.04-2.2-2.2L.84 21.62c-.37.36-.5.92-.33 1.42.17.5.6.85 1.12.93.32.04.72-.04 1.06-.17l.49-.11zm17.64-23.4c-.5-.17-1.06-.04-1.42.33L10.8 9.22l2.2 2.2 8.16-8.16c.36-.37.5-.92.33-1.42-.17-.5-.6-.85-1.12-.93-.16-.02-.35 0-.55.02l.01.36zm-8.86 12.27L3.84.45c-.37-.36-.92-.5-1.42-.33-.5.17-.85.6-.93 1.12-.04.32.04.72.17 1.06l.11.49 8.04 8.04 2.2-2.2-.01-.07zm2.22 2.22l8.16 8.16c.34.37.48.92.32 1.42s-.59.85-1.11.93c-.33.04-.73-.04-1.07-.17l-.49-.12-8.02-8.02 2.21-2.2z"/></svg>
+        Google Play — Coming Soon
+      </span>
+    </div>
+    <p class="hero-free">✦ 100% FREE · NO PAYWALL ✦</p>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-arrow"></div>
+    Explore
+  </div>
+</section>
+
+<!-- SKINS -->
+<section class="section reveal" id="skins">
+  <p class="section-label">Choose Your Skin</p>
+  <h2 class="section-title">7 ICONIC GAME WORLDS</h2>
+  <p class="section-sub">Your real-world map. Their legendary aesthetic. Swap skins anytime and navigate through the game world you love most.</p>
+
+  <div class="skins-grid">
+    <div class="skin-tabs">
+      <button class="skin-tab active" data-skin="gta" onclick="switchSkin('gta')">GTA V</button>
+      <button class="skin-tab" data-skin="gta-day" onclick="switchSkin('gta-day')">GTA DAY</button>
+      <button class="skin-tab" data-skin="gta-night" onclick="switchSkin('gta-night')">GTA NIGHT</button>
+      <button class="skin-tab" data-skin="rdr2" onclick="switchSkin('rdr2')">RDR2</button>
+      <button class="skin-tab" data-skin="minecraft" onclick="switchSkin('minecraft')">MINECRAFT</button>
+      <button class="skin-tab" data-skin="fortnite" onclick="switchSkin('fortnite')">FORTNITE</button>
+      <button class="skin-tab" data-skin="fallout" onclick="switchSkin('fallout')">FALLOUT</button>
+      <button class="skin-tab" data-skin="skyrim" onclick="switchSkin('skyrim')">SKYRIM</button>
+      <button class="skin-tab" data-skin="cyberpunk" onclick="switchSkin('cyberpunk')">CYBERPUNK</button>
+    </div>
+
+    <div class="skin-showcase">
+      <div class="phone-frame" id="phoneFrame">
+        <div class="phone-screen">
+          <img src="skin-gta.png" data-skin="gta" class="active-skin" alt="GTA V skin">
+          <img src="skin-gta-day.png" data-skin="gta-day" alt="GTA V Day skin">
+          <img src="skin-gta-night.png" data-skin="gta-night" alt="GTA V Night skin">
+          <img src="skin-rdr2.png" data-skin="rdr2" alt="RDR2 skin">
+          <img src="skin-minecraft.png" data-skin="minecraft" alt="Minecraft skin">
+          <img src="skin-fortnite.png" data-skin="fortnite" alt="Fortnite skin">
+          <img src="skin-fallout.png" data-skin="fallout" alt="Fallout skin">
+          <img src="skin-skyrim.png" data-skin="skyrim" alt="Skyrim skin">
+        </div>
+      </div>
+
+      <div class="skin-info" id="skinInfo">
+        <p class="skin-info-label" id="skinLabel" style="color: #97cd3b;">ACTIVE SKIN</p>
+        <h3 id="skinTitle">GTA V</h3>
+        <p id="skinDesc">The classic Los Santos aesthetic — bold road lines, green and red property markers, and that iconic GTA map grid. Your city becomes a sprawling open-world playground.</p>
+        <span class="skin-badge" id="skinBadge" style="color: #97cd3b; border-color: #97cd3b33;">LOS SANTOS</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section reveal">
+  <p class="section-label">Core Features</p>
+  <h2 class="section-title">NOT JUST A MAP. A MISSION.</h2>
+  <p class="section-sub">Explore your real world with game mechanics that make every trip an adventure.</p>
+
+  <div class="features-grid">
+    <div class="feature-card feat-fog">
+      <div class="feature-icon">🌫️</div>
+      <h3>FOG OF WAR</h3>
+      <p>Your map starts covered. Every road you drive, every block you walk — the fog lifts and the world reveals itself. Unlock your city like a game map.</p>
+    </div>
+    <div class="feature-card feat-mission">
+      <div class="feature-icon">📍</div>
+      <h3>MISSIONS</h3>
+      <p>Create real-world missions, set waypoints, and sync them to your calendar. Turn errands into objectives and side quests into daily adventures.</p>
+    </div>
+    <div class="feature-card feat-squad">
+      <div class="feature-icon">👥</div>
+      <h3>SQUAD UP</h3>
+      <p>Share missions with friends, see who's exploring, and chat globally. Your crew, your map, your world — connected.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<div class="proof-bar reveal">
+  <div class="proof-grid">
+    <div class="proof-item">
+      <div class="proof-number"><span class="highlight">3,700</span>+</div>
+      <div class="proof-label">Discord Members</div>
+    </div>
+    <div class="proof-item">
+      <div class="proof-number"><span class="highlight">8</span>M+</div>
+      <div class="proof-label">TikTok Views</div>
+    </div>
+    <div class="proof-item">
+      <div class="proof-number"><span class="highlight">7</span></div>
+      <div class="proof-label">Game Skins</div>
+    </div>
+    <div class="proof-item">
+      <div class="proof-number"><span class="highlight">100%</span></div>
+      <div class="proof-label">Free Forever</div>
+    </div>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials reveal">
+  <p class="section-label">From The Community</p>
+  <h2 class="section-title">REAL EXPLORERS. REAL REACTIONS.</h2>
+  <p class="section-sub">Don't take our word for it — hear from the people already out there unlocking their cities.</p>
+
+  <div class="testimonials-track">
+
+    <div class="testimonial-card">
+      <div class="testimonial-stars">
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="testimonial-quote">Bro I literally drive <strong>longer routes on purpose</strong> now just to clear more fog. My friends think I'm insane. I'm just trying to 100% my city.</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar avatar-1">J</div>
+        <div>
+          <div class="testimonial-name">Jake M.</div>
+          <div class="testimonial-handle">Discord Member</div>
+        </div>
+        <span class="testimonial-skin-tag tag-gta">GTA Main</span>
+      </div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="testimonial-stars">
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="testimonial-quote">The Fallout skin with fog of war is genuinely the coolest thing on my phone. <strong>Navigating through the wasteland to get groceries</strong> hits different. Nah Google Maps is finished.</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar avatar-5">S</div>
+        <div>
+          <div class="testimonial-name">Samira K.</div>
+          <div class="testimonial-handle">App Store Review</div>
+        </div>
+        <span class="testimonial-skin-tag tag-fo">Fallout</span>
+      </div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="testimonial-stars">
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="testimonial-quote">My kid saw me using the <strong>Minecraft skin</strong> and now he wants to "go on missions" every weekend. We've explored more of our city in 2 weeks than we did all last year.</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar avatar-3">D</div>
+        <div>
+          <div class="testimonial-name">DeAndre T.</div>
+          <div class="testimonial-handle">Discord Member</div>
+        </div>
+        <span class="testimonial-skin-tag tag-mc">Minecraft</span>
+      </div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="testimonial-stars">
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="testimonial-quote">I was skeptical but the <strong>Cyberpunk skin at night</strong> while driving through downtown? Unreal. Felt like I was in Night City. And it's actually free?? No cap.</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar avatar-3">R</div>
+        <div>
+          <div class="testimonial-name">Riley N.</div>
+          <div class="testimonial-handle">TikTok Comment</div>
+        </div>
+        <span class="testimonial-skin-tag tag-cp">Cyberpunk</span>
+      </div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="testimonial-stars">
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="testimonial-quote">The missions feature + calendar sync is lowkey the reason I'm <strong>actually productive now</strong>. Turned my whole errand list into side quests. Went from dreading Saturdays to speedrunning them.</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar avatar-4">M</div>
+        <div>
+          <div class="testimonial-name">Marcus W.</div>
+          <div class="testimonial-handle">Discord Member</div>
+        </div>
+        <span class="testimonial-skin-tag tag-rdr">RDR2</span>
+      </div>
+    </div>
+
+    <div class="testimonial-card">
+      <div class="testimonial-stars">
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg class="testimonial-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="testimonial-quote">GTA skin on a road trip is a <strong>whole different experience</strong>. My girl was navigating for me and she's like "turn left on Grove Street" 💀 We were dying laughing the entire ride.</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar avatar-6">T</div>
+        <div>
+          <div class="testimonial-name">Tyler B.</div>
+          <div class="testimonial-handle">Reddit</div>
+        </div>
+        <span class="testimonial-skin-tag tag-gta">GTA Main</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- DISCORD -->
+<section class="discord-section reveal" id="discord">
+  <div class="discord-card">
+    <span class="discord-icon">💬</span>
+    <h2>JOIN THE SQUAD</h2>
+    <p><strong>3,700+ explorers</strong> are already inside. Get updates, share your map discoveries, and help shape what's next.</p>
+    <a href="https://discord.gg/qsU8KBF8wy" class="btn btn-discord" style="font-size:1rem; padding: 0.85rem 2.5rem;">
+      <svg width="20" height="16" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.8 40.8 0 00-1.8 3.7 54 54 0 00-16.2 0A37.4 37.4 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.1a58.7 58.7 0 0017.7 9 .2.2 0 00.3-.1 42 42 0 003.6-5.9.2.2 0 00-.1-.3 38.7 38.7 0 01-5.5-2.6.2.2 0 01 0-.4l1.1-.9a.2.2 0 01.2 0 41.9 41.9 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .4c-1.8 1-3.6 1.9-5.5 2.6a.2.2 0 00-.1.3 47.2 47.2 0 003.6 5.9.2.2 0 00.3.1 58.5 58.5 0 0017.7-9v-.1c1.4-15.2-2.4-28.4-10-40.1a.2.2 0 00-.1-.1zM23.7 37.3c-3.5 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7zm23.3 0c-3.5 0-6.3-3.2-6.3-7s2.8-7 6.3-7 6.4 3.2 6.3 7-2.8 7-6.3 7z"/></svg>
+      Join Discord
+    </a>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta reveal">
+  <h2>YOUR CITY IS WAITING.</h2>
+  <p class="tagline">Download Mission Map. Choose your skin. Start exploring.</p>
+  <div class="final-ctas">
+    <a href="https://apps.apple.com/us/app/mission-map-app/id6744417798" class="btn btn-primary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      Download on App Store
+    </a>
+    <span class="btn btn-dim">Google Play — Coming Soon</span>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-copy">© 2026 Mission Map. All rights reserved.</span>
+  <div class="footer-socials">
+    <a href="#">TikTok</a>
+    <a href="#">Instagram</a>
+    <a href="#">YouTube</a>
+    <a href="#">X</a>
+  </div>
+</footer>
+
+<script>
+  // Skin data
+  const skinData = {
+    'gta': {
+      title: 'GTA V',
+      label: 'ACTIVE SKIN',
+      desc: 'The classic Los Santos aesthetic — bold road lines, green and red property markers, and that iconic GTA map grid. Your city becomes a sprawling open-world playground.',
+      badge: 'LOS SANTOS',
+      color: '#97cd3b',
+      glow: 'rgba(151,205,59,0.15)'
+    },
+    'gta-day': {
+      title: 'GTA V — DAY',
+      label: 'DAY MODE',
+      desc: 'The clean daytime variant — muted grays with high-contrast road lines and building outlines. Fog of war reveals your explored territory in sharp detail against the haze.',
+      badge: 'DAY CYCLE',
+      color: '#b0b0b0',
+      glow: 'rgba(176,176,176,0.15)'
+    },
+    'gta-night': {
+      title: 'GTA V — NIGHT',
+      label: 'NIGHT MODE',
+      desc: 'After dark, the map drops into deep blacks and dark blues. The cyan fog of war glow cuts through the night like headlights on an empty highway. Pure atmosphere.',
+      badge: 'NIGHT CYCLE',
+      color: '#4a90d9',
+      glow: 'rgba(74,144,217,0.15)'
+    },
+    'rdr2': {
+      title: 'RED DEAD 2',
+      label: 'ACTIVE SKIN',
+      desc: 'Weathered parchment and frontier cartography. Your streets become dusty trails, your location marker pulses red like a campfire in the wilderness. The Old West, reimagined.',
+      badge: 'FRONTIER',
+      color: '#c8864a',
+      glow: 'rgba(200,134,74,0.15)'
+    },
+    'minecraft': {
+      title: 'MINECRAFT',
+      label: 'ACTIVE SKIN',
+      desc: 'Full pixelated Overworld transformation — grass-green terrain, blocky road patterns, and stone-gray UI elements. Even the buildings get the voxel treatment. Craft your commute.',
+      badge: 'OVERWORLD',
+      color: '#5b8731',
+      glow: 'rgba(91,135,49,0.15)'
+    },
+    'fortnite': {
+      title: 'FORTNITE',
+      label: 'ACTIVE SKIN',
+      desc: 'Deep blue terrain with glowing cyan lines and yellow zone boundaries. Distance markers, property pins, and that unmistakable battle-map energy. Drop in.',
+      badge: 'BATTLE MAP',
+      color: '#3a7bf7',
+      glow: 'rgba(58,123,247,0.15)'
+    },
+    'fallout': {
+      title: 'FALLOUT',
+      label: 'ACTIVE SKIN',
+      desc: 'Full Pip-Boy terminal aesthetic — phosphor green on black, complete with MAP/DATA/QUESTS sidebar, coordinate readout, and that CRT scanline glow. Welcome to the Wasteland.',
+      badge: 'WASTELAND',
+      color: '#43d15b',
+      glow: 'rgba(67,209,91,0.15)'
+    },
+    'skyrim': {
+      title: 'SKYRIM',
+      label: 'ACTIVE SKIN',
+      desc: 'Medieval cartography with satellite terrain — shield-crest city markers, chapel icons, mountain peaks, and an in-game clock reading "Middas." Your journey awaits, Dragonborn.',
+      badge: 'TAMRIEL',
+      color: '#6eadd8',
+      glow: 'rgba(110,173,216,0.15)'
+    },
+    'cyberpunk': {
+      title: 'CYBERPUNK',
+      label: 'COMING SOON',
+      desc: 'Neon-soaked streets, holographic overlays, and a Night City color palette that makes every drive feel like a mission through a dystopian megacity. Stay tuned.',
+      badge: 'NIGHT CITY',
+      color: '#fcee09',
+      glow: 'rgba(252,238,9,0.15)'
+    }
+  };
+
+  function switchSkin(skin) {
+    const data = skinData[skin];
+    if (!data) return;
+
+    // Update tabs
+    document.querySelectorAll('.skin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.skin-tab[data-skin="${skin}"]`).classList.add('active');
+
+    // Update phone screen
+    document.querySelectorAll('.phone-screen img').forEach(img => img.classList.remove('active-skin'));
+    const targetImg = document.querySelector(`.phone-screen img[data-skin="${skin}"]`);
+    if (targetImg) targetImg.classList.add('active-skin');
+
+    // Update phone glow
+    document.getElementById('phoneFrame').style.setProperty('--phone-glow', data.glow);
+
+    // Update info panel
+    document.getElementById('skinLabel').textContent = data.label;
+    document.getElementById('skinLabel').style.color = data.color;
+    document.getElementById('skinTitle').textContent = data.title;
+    document.getElementById('skinDesc').textContent = data.desc;
+    const badge = document.getElementById('skinBadge');
+    badge.textContent = data.badge;
+    badge.style.color = data.color;
+    badge.style.borderColor = data.color + '44';
+  }
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // Stagger testimonial cards
+  document.querySelectorAll('.testimonial-card').forEach((card, i) => {
+    card.style.transitionDelay = `${i * 0.1}s`;
+    card.classList.add('reveal');
+    observer.observe(card);
+  });
+
+  // Auto-cycle skins every 4s when section is visible
+  const skinOrder = ['gta', 'gta-day', 'gta-night', 'rdr2', 'minecraft', 'fortnite', 'fallout', 'skyrim', 'cyberpunk'];
+  let currentSkinIdx = 0;
+  let autoCycleInterval = null;
+  let userInteracted = false;
+
+  const skinsSection = document.getElementById('skins');
+  const skinObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !userInteracted) {
+        autoCycleInterval = setInterval(() => {
+          currentSkinIdx = (currentSkinIdx + 1) % skinOrder.length;
+          switchSkin(skinOrder[currentSkinIdx]);
+        }, 3500);
+      } else {
+        clearInterval(autoCycleInterval);
+      }
+    });
+  }, { threshold: 0.3 });
+  skinObserver.observe(skinsSection);
+
+  // Stop auto-cycle on manual interaction
+  document.querySelectorAll('.skin-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      userInteracted = true;
+      clearInterval(autoCycleInterval);
+    });
+  });
+</script>
+
+</body>
+</html>
