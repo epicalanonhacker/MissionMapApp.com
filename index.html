@@ -443,7 +443,13 @@
       0 0 0 1px #1a1c2e,
       0 20px 60px rgba(0,0,0,0.5),
       0 0 40px var(--phone-glow, rgba(0,240,255,0.1));
-    transition: box-shadow 0.5s ease;
+    transition: width 0.5s ease, height 0.5s ease, border-radius 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .phone-frame.landscape {
+    width: 540px;
+    height: 270px;
+    border-radius: 24px;
   }
 
   .phone-frame::before {
@@ -456,6 +462,16 @@
     background: #0a0b0f;
     border-radius: 0 0 16px 16px;
     z-index: 10;
+    transition: all 0.5s ease;
+  }
+
+  .phone-frame.landscape::before {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 80px;
+    border-radius: 0 12px 12px 0;
   }
 
   .phone-screen {
@@ -532,6 +548,11 @@
       width: 220px;
       height: 440px;
       border-radius: 26px;
+    }
+    .phone-frame.landscape {
+      width: min(440px, 90vw);
+      height: 220px;
+      border-radius: 20px;
     }
     .skin-info {
       text-align: center;
@@ -1310,26 +1331,29 @@
     'fortnite': {
       title: 'FORTNITE',
       label: 'ACTIVE SKIN',
-      desc: 'Deep blue terrain with glowing cyan lines and yellow zone boundaries. Distance markers, property pins, and that unmistakable battle-map energy. Drop in.',
+      desc: 'Bright blue seas surrounding your explored territory — fog of war reveals satellite imagery as you move through the world. Yellow property markers and that iconic battle-royale zone energy. Drop in.',
       badge: 'BATTLE MAP',
       color: '#3a7bf7',
-      glow: 'rgba(58,123,247,0.15)'
+      glow: 'rgba(58,123,247,0.15)',
+      landscape: false
     },
     'fallout': {
       title: 'FALLOUT',
       label: 'ACTIVE SKIN',
-      desc: 'Full Pip-Boy terminal aesthetic — phosphor green on black, complete with MAP/DATA/QUESTS sidebar, coordinate readout, and that CRT scanline glow. Welcome to the Wasteland.',
+      desc: 'Full Pip-Boy terminal aesthetic — phosphor green on black, complete with MAP/DATA/QUESTS sidebar, coordinate readout, and that CRT scanline glow. Best experienced in landscape. Welcome to the Wasteland.',
       badge: 'WASTELAND',
       color: '#43d15b',
-      glow: 'rgba(67,209,91,0.15)'
+      glow: 'rgba(67,209,91,0.15)',
+      landscape: true
     },
     'skyrim': {
       title: 'SKYRIM',
       label: 'ACTIVE SKIN',
-      desc: 'Medieval cartography with satellite terrain — shield-crest city markers, chapel icons, mountain peaks, and an in-game clock reading "Middas." Your journey awaits, Dragonborn.',
+      desc: 'Medieval cartography with satellite terrain — shield-crest city markers, chapel icons, mountain peaks, and an in-game clock reading "Middas." Best in landscape. Your journey awaits, Dragonborn.',
       badge: 'TAMRIEL',
       color: '#6eadd8',
-      glow: 'rgba(110,173,216,0.15)'
+      glow: 'rgba(110,173,216,0.15)',
+      landscape: true
     },
     'cyberpunk': {
       title: 'CYBERPUNK',
@@ -1356,6 +1380,14 @@
 
     // Update phone glow
     document.getElementById('phoneFrame').style.setProperty('--phone-glow', data.glow);
+
+    // Toggle landscape mode for Skyrim/Fallout
+    const phoneFrame = document.getElementById('phoneFrame');
+    if (data.landscape) {
+      phoneFrame.classList.add('landscape');
+    } else {
+      phoneFrame.classList.remove('landscape');
+    }
 
     // Update info panel
     document.getElementById('skinLabel').textContent = data.label;
